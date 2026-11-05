@@ -15,7 +15,7 @@ st.set_page_config(
 
 
 def api_request(method, path, **kwargs):
-    """Send en forespørgsel til Flask API'et."""
+    """Send en HTTP-forespørgsel til Flask API'et."""
     try:
         response = httpx.request(
             method,
@@ -26,12 +26,12 @@ def api_request(method, path, **kwargs):
         response.raise_for_status()
 
         if response.status_code == 204:
-            return None
+            return True
 
         return response.json()
 
     except httpx.ConnectError:
-        st.error("Kan ikke forbinde til API'et. Er Flask-serveren startet?")
+        st.error("Kan ikke forbinde til API'et. Er serveren startet?")
 
     except httpx.TimeoutException:
         st.error("API'et svarer for langsomt. Prøv igen.")
@@ -42,7 +42,7 @@ def api_request(method, path, **kwargs):
                 "error", "Der opstod en fejl"
             )
         except ValueError:
-            message = "API'et returnerede et ugyldigt svar"
+            message = "API'et returnerede et ugyldigt svar."
 
         st.error(message)
 
@@ -58,7 +58,6 @@ def api_request(method, path, **kwargs):
 st.title("🍻 Fredagsbar")
 st.write("Se vores events, tilmeld dig, eller opret et nyt arrangement.")
 
-# Brugerens navn gemmes i session_state
 if "name" not in st.session_state:
     st.session_state.name = ""
 
@@ -68,13 +67,12 @@ with st.sidebar:
 
 name = st.session_state.name.strip()
 
-# Hent alle events ved hver genkørsel
 events = api_request("GET", "/events")
 
 if events is None:
     st.stop()
 
-# Oversigt over alle events
+# Oversigt
 st.subheader("📋 Oversigt over events")
 
 rows = []
@@ -90,9 +88,13 @@ for event in events:
         "Ledige pladser": available
     })
 
-st.dataframe(rows, use_container_width=True, hide_index=True)
+st.dataframe(
+    rows,
+    use_container_width=True,
+    hide_index=True
+)
 
-# Vælg et event og tilmeld/afmeld
+# Tilmelding og afmelding
 st.subheader("🎟️ Tilmeld eller afmeld")
 
 if events:
@@ -154,29 +156,19 @@ if events:
                 f"/events/{selected_id}/signups/{encoded_name}"
             )
 
-            # DELETE returnerer 204 uden JSON
-            # Kontrollér opdateringen ved at hente events igen
-            updated_events = api_request("GET", "/events")
+            if result is True:
+                st.session_state["notice"] = "Du er nu afmeldt!"
+                st.rerun()
 
-            if updated_events is not None:
-                updated_event = next(
-                    (event for event in updated_events
-                     if event["id"] == selected_id),
-                    None
-                )
-
-                if updated_event and name not in updated_event["participants"]:
-                    st.session_state["notice"] = "Du er nu afmeldt!"
-                    st.rerun()
+    # Vis succesbesked under knapperne
+    if "notice" in st.session_state:
+        st.success(st.session_state.pop("notice"))
 
 else:
     st.info("Der er endnu ingen events.")
 
-if "notice" in st.session_state:
-    st.success(st.session_state.pop("notice"))
 
-
-# Formular til oprettelse af events
+# Opret event
 st.divider()
 st.subheader("➕ Opret et nyt event")
 
