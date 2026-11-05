@@ -1,0 +1,25 @@
+
+# Python virtuelt miljø
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Python test cache
+.pytest_cache/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Miljøvariabler og hemmeligheder
+.env
+.env.*
+
+# Systemfiler
+.DS_Store
+Thumbs.db
+
+# VS Code lokale indstillinger
+.vscode/

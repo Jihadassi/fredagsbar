@@ -1,0 +1,239 @@
+
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Fredagsbar Event API",
+    "version": "1.0.0",
+    "description": "API til oprettelse af events samt tilmelding og afmelding."
+  },
+  "host": "localhost:5000",
+  "basePath": "/",
+  "schemes": ["http"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/events": {
+      "get": {
+        "summary": "Hent alle events",
+        "responses": {
+          "200": {
+            "description": "Liste over events",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Event"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Opret et nyt event",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "event",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/NewEvent"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Event oprettet",
+            "schema": {
+              "$ref": "#/definitions/Event"
+            }
+          },
+          "400": {
+            "description": "Manglende eller ugyldige data",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/events/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/parameters/EventId"
+        }
+      ],
+      "get": {
+        "summary": "Hent et bestemt event",
+        "responses": {
+          "200": {
+            "description": "Event fundet",
+            "schema": {
+              "$ref": "#/definitions/Event"
+            }
+          },
+          "404": {
+            "description": "Event ikke fundet",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Slet et event",
+        "responses": {
+          "204": {
+            "description": "Event slettet"
+          },
+          "404": {
+            "description": "Event ikke fundet",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/events/{id}/signups": {
+      "post": {
+        "summary": "Tilmeld en person til et event",
+        "parameters": [
+          {
+            "$ref": "#/parameters/EventId"
+          },
+          {
+            "in": "body",
+            "name": "participant",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Participant"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Person tilmeldt",
+            "schema": {
+              "$ref": "#/definitions/Event"
+            }
+          },
+          "400": {
+            "description": "Navn mangler eller er ugyldigt",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Event ikke fundet",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "409": {
+            "description": "Event fuldt eller person allerede tilmeldt",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/events/{id}/signups/{name}": {
+      "delete": {
+        "summary": "Afmeld en person fra et event",
+        "parameters": [
+          {
+            "$ref": "#/parameters/EventId"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Navn på personen, der skal afmeldes"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Person afmeldt"
+          },
+          "404": {
+            "description": "Event eller tilmelding ikke fundet",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "EventId": {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "type": "integer",
+      "description": "Eventets ID"
+    }
+  },
+  "definitions": {
+    "Event": {
+      "type": "object",
+      "required": ["id", "title", "date", "capacity", "participants"],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "description": "Dato i formatet YYYY-MM-DD"
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "NewEvent": {
+      "type": "object",
+      "required": ["title", "date", "capacity"],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "Participant": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
